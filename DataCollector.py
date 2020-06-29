@@ -23,6 +23,7 @@ def checkOptions():
     args = parser.parse_args()
     return args
 
+
 def getRequest(URL):
     fullURL = options.router + URL
     if options.kerberos:
@@ -63,6 +64,30 @@ def getSegments():
     URL = '/druid/v2/sql'
     segmentJSON = postRequest(URL, queryJSON)
     return segmentJSON
+
+
+def getServers():
+    queryJSON = {'query': """
+        SELECT "server" AS "service", "server_type" AS "service_type", "tier", "host", "plaintext_port", "tls_port", "curr_size", "max_size",  
+          (CASE "server_type" 
+            WHEN \'coordinator\' THEN 8  
+            WHEN \'overlord\' THEN 7 
+            WHEN \'router\' THEN 6 
+            WHEN \'broker\' THEN 5  
+            WHEN \'historical\' THEN 4 
+            WHEN \'indexer\' THEN 3 
+            WHEN \'middle_manager\' THEN 2 
+            WHEN \'peon\' THEN 1 
+            ELSE 0 
+            END ) AS "rank" 
+        FROM sys.servers 
+        ORDER BY "rank" DESC, 
+        "service" DESC
+        """
+      }
+    URL = '/druid/v2/sql'
+    serverJSON = postRequest(URL, queryJSON)
+    return serverJSON
 
 
 def getCompaction():
@@ -128,6 +153,7 @@ def main():
     datasourceJSON = getDatasources()
     coordinatorJSON = getCoordinatorSettings()
     overlordJSON = getOverlordSettings()
+    serverJSON = getServers()
     
     fileDetails = options.Customer + '_' + datetime.date.today().isoformat()
     with zipfile.ZipFile(fileDetails + '.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
@@ -138,6 +164,7 @@ def main():
         archive.writestr(os.path.join(fileDetails, 'datasources.json'), json.dumps(datasourceJSON))
         archive.writestr(os.path.join(fileDetails, 'coordinator.json'), json.dumps(coordinatorJSON))
         archive.writestr(os.path.join(fileDetails, 'overlord.json'), json.dumps(overlordJSON))
+        archive.writestr(os.path.join(fileDetails, 'servers.json'), json.dumps(serverJSON))
 
 
 if __name__ == '__main__':
