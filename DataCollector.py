@@ -122,6 +122,11 @@ def getOverlordSettings():
     overlordJSON = getRequest(URL)
     return overlordJSON
 
+def getLookups():
+    URL = '/druid/coordinator/v1/lookups/config/all'
+    lookupJSON = getRequest(URL)
+    return lookupJSON
+
 def main():
     global options
     options = checkOptions()
@@ -154,6 +159,7 @@ def main():
     coordinatorJSON = getCoordinatorSettings()
     overlordJSON = getOverlordSettings()
     serverJSON = getServers()
+    lookupJSON = getLookups()
     
     fileDetails = options.Customer + '_' + datetime.date.today().isoformat()
     with zipfile.ZipFile(fileDetails + '.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
@@ -165,6 +171,7 @@ def main():
         archive.writestr(os.path.join(fileDetails, 'coordinator.json'), json.dumps(coordinatorJSON))
         archive.writestr(os.path.join(fileDetails, 'overlord.json'), json.dumps(overlordJSON))
         archive.writestr(os.path.join(fileDetails, 'servers.json'), json.dumps(serverJSON))
+        archive.writestr(os.path.join(fileDetails, 'lookups.json'), json.dumps(lookupJSON))
 
 
 if __name__ == '__main__':

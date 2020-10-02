@@ -45,7 +45,7 @@ def compactionToSheet(ws, data):
         ws.write(sheetRow, sheetCol + 2, item['inputSegmentSizeBytes'])
         ws.write(sheetRow, sheetCol + 3, item['maxRowsPerSegment'])
         ws.write(sheetRow, sheetCol + 4, item['skipOffsetFromLatest'])
-        ws.write(sheetRow, sheetCol + 5, item['tuningConfig'])
+        ws.write(sheetRow, sheetCol + 5, str(item['tuningConfig']))
         ws.write(sheetRow, sheetCol + 6, item['taskContext'])
         sheetRow += 1
     return
@@ -103,12 +103,40 @@ def supervisorsToSheet(ws, data):
         ws.write(sheetRow, sheetCol + 5, item['spec']['ioConfig']['taskCount'])
         ws.write(sheetRow, sheetCol + 6, item['spec']['ioConfig']['replicas'])
         ws.write(sheetRow, sheetCol + 7, item['spec']['ioConfig']['taskDuration'])
-        ws.write(sheetRow, sheetCol + 8, item['spec']['ioConfig']['recordsPerFetch'])
+        try:
+            ws.write(sheetRow, sheetCol + 8, item['spec']['ioConfig']['recordsPerFetch'])
+        except:
+            pass
         ws.write(sheetRow, sheetCol + 9, item['spec']['tuningConfig']['maxRowsInMemory'])
         ws.write(sheetRow, sheetCol + 10, item['spec']['tuningConfig']['maxRowsPerSegment'])
         sheetRow += 1
     return
 
+
+def serversToSheet(ws, data):
+    ws.write(0, 0, "Service")
+    ws.write(0, 1, "Service Type")
+    ws.write(0, 2, "Tier")
+    ws.write(0, 3, "Host")
+    ws.write(0, 4, "Plaintext Port")
+    ws.write(0, 5, "TLS Port")
+    ws.write(0, 6, "Current Size")
+    ws.write(0, 7, "Max Size")
+    ws.write(0, 8, "Rank")
+    sheetRow = 1
+    sheetCol = 0
+    for item in data:
+        ws.write(sheetRow, sheetCol, item['service'])
+        ws.write(sheetRow, sheetCol + 1, item['service_type'])
+        ws.write(sheetRow, sheetCol + 2, item['tier'])
+        ws.write(sheetRow, sheetCol + 3, item['host'])
+        ws.write(sheetRow, sheetCol + 4, item['plaintext_port'])
+        ws.write(sheetRow, sheetCol + 5, item['tls_port'])
+        ws.write(sheetRow, sheetCol + 6, item['curr_size'])
+        ws.write(sheetRow, sheetCol + 7, item['max_size'])
+        ws.write(sheetRow, sheetCol + 8, item['rank'])
+        sheetRow += 1
+    return
 
 def main():
     global options
@@ -137,6 +165,11 @@ def main():
             supervisorsJSON = json.load(supervisors)
             supervisorsSheet = workbook.add_worksheet('Supervisors')
             supervisorsToSheet(supervisorsSheet, supervisorsJSON)
+        with zipper.open(zipDir + '/' + 'servers.json') as servers:
+            serversJSON = json.load(servers)
+            serversSheet = workbook.add_worksheet('Servers')
+            serversToSheet(serversSheet, serversJSON)
+
 
     workbook.close()
 
